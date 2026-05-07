@@ -11,12 +11,15 @@ export function CarCard({ car }) {
     >
       {/* Imagem */}
       <div className="relative aspect-[4/3] flex items-center justify-center overflow-hidden" style={{background: car.bg || '#dce9ff'}}>
-        <svg viewBox="0 0 500 260" className="w-4/5 opacity-[0.18]" fill="#0b1c30">
-          <path d="M40 190 Q40 150 80 140 L150 110 Q190 80 240 75 L360 75 Q420 76 450 130 L470 180 Q475 195 465 200 L50 200 Q40 200 40 190Z"/>
-          <ellipse cx="120" cy="200" rx="38" ry="38"/>
-          <ellipse cx="370" cy="200" rx="38" ry="38"/>
-          <rect x="160" y="85" width="160" height="55" rx="12"/>
-        </svg>
+        {car.imagemUrl
+          ? <img src={car.imagemUrl} alt={`${car.brand} ${car.model}`} className="w-full h-full object-cover" />
+          : <svg viewBox="0 0 500 260" className="w-4/5 opacity-[0.18]" fill="#0b1c30">
+              <path d="M40 190 Q40 150 80 140 L150 110 Q190 80 240 75 L360 75 Q420 76 450 130 L470 180 Q475 195 465 200 L50 200 Q40 200 40 190Z"/>
+              <ellipse cx="120" cy="200" rx="38" ry="38"/>
+              <ellipse cx="370" cy="200" rx="38" ry="38"/>
+              <rect x="160" y="85" width="160" height="55" rx="12"/>
+            </svg>
+        }
         <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase text-on-surface">
           {car.brand}
         </span>

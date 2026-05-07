@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import pg from 'pg'
 
 const { Pool } = pg
@@ -8,6 +9,7 @@ const pool = new Pool({
   database: process.env.DB_NAME || 'carcompare',
   user: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
+  ssl: { rejectUnauthorized: false },
 })
 
 pool.on('connect', () => {

@@ -1,33 +1,30 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CarCard, Button } from '../components/ui'
-
-const FEATURED_CARS = [
-  { id:1, brand:'Porsche',       model:'911 Carrera S',    price:'R$ 980.000',   hp:450, acc:'3.7s', fuel:'Gasolina', bg:'#dce9ff' },
-  { id:2, brand:'BMW',           model:'M4 Competition',   price:'R$ 985.000',   hp:510, acc:'3.9s', fuel:'Gasolina', bg:'#d3e4fe' },
-  { id:3, brand:'Audi',          model:'RS e-tron GT',     price:'R$ 1.100.000', hp:646, acc:'3.3s', fuel:'Elétrico', bg:'#e5eeff' },
-  { id:4, brand:'Mercedes-Benz', model:'AMG G 63',         price:'R$ 1.850.000', hp:585, acc:'4.5s', fuel:'Gasolina', bg:'#cbdbf5' },
-]
+import { getCars } from '../services/api'
 
 const CATEGORIES = [
-  { label:'Sedans',     icon:'directions_car',   path:'/catalogo?cat=sedan' },
-  { label:'SUVs',       icon:'airport_shuttle',  path:'/catalogo?cat=suv' },
-  { label:'Esportivos', icon:'sports_score',     path:'/catalogo?cat=esportivo' },
-  { label:'Elétricos',  icon:'electric_car',     path:'/catalogo?cat=eletrico' },
-  { label:'Picapes',    icon:'local_shipping',   path:'/catalogo?cat=picape' },
-  { label:'Hatch',      icon:'directions_car',   path:'/catalogo?cat=hatch' },
+  { label:'Sedans',     icon:'directions_car',  path:'/catalogo?cat=sedan' },
+  { label:'SUVs',       icon:'airport_shuttle', path:'/catalogo?cat=suv' },
+  { label:'Esportivos', icon:'sports_score',    path:'/catalogo?cat=esportivo' },
+  { label:'Elétricos',  icon:'electric_car',    path:'/catalogo?cat=eletrico' },
+  { label:'Picapes',    icon:'local_shipping',  path:'/catalogo?cat=picape' },
+  { label:'Hatch',      icon:'directions_car',  path:'/catalogo?cat=hatch' },
 ]
-
-const BRANDS = ['BMW','Porsche','Audi','Mercedes-Benz','Lamborghini','Ferrari']
 
 export function Home() {
   const navigate = useNavigate()
+  const [featured, setFeatured] = useState([])
+
+  useEffect(() => {
+    getCars().then(cars => setFeatured(cars.slice(0, 4))).catch(console.error)
+  }, [])
 
   return (
     <div className="min-h-screen">
 
       {/* ── Hero ── */}
       <section className="relative w-full overflow-hidden" style={{minHeight:480, background:'linear-gradient(to right, #e5eeff 0%, #e5eeff 50%, #d3e4fe 100%)'}}>
-        {/* Círculos decorativos */}
         <div className="absolute right-0 top-0 bottom-0 w-1/2 overflow-hidden pointer-events-none">
           <div className="absolute" style={{right:-40,top:-40,width:420,height:420,borderRadius:'50%',background:'rgba(203,219,245,0.5)'}}/>
           <div className="absolute" style={{right:60,bottom:-80,width:300,height:300,borderRadius:'50%',background:'rgba(211,228,254,0.6)'}}/>
@@ -39,7 +36,6 @@ export function Home() {
           </svg>
         </div>
 
-        {/* Texto */}
         <div className="relative z-10 max-w-app mx-auto px-8 flex flex-col justify-center py-20 md:w-3/5">
           <span className="text-[11px] font-bold tracking-widest uppercase text-surface-tint mb-3">Plataforma automotiva</span>
           <h1 className="font-black tracking-tight text-on-surface mb-4 leading-tight" style={{fontSize:'clamp(28px,4vw,52px)'}}>
@@ -86,7 +82,7 @@ export function Home() {
           </button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {FEATURED_CARS.map(car => <CarCard key={car.id} car={car} />)}
+          {featured.map(car => <CarCard key={car.id} car={{...car, price: car.priceLabel}} />)}
         </div>
       </section>
 
