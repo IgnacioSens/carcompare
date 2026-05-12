@@ -21,7 +21,16 @@ export default {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
       },
-      maxWidth: { app: '1280px' },
+      maxWidth: { app: '1400px' },
+      screens: {
+        'xs':  '480px',
+        'sm':  '640px',
+        'md':  '768px',
+        'lg':  '1024px',
+        'xl':  '1280px',
+        '2xl': '1536px',
+        '3xl': '1920px',
+      },
       boxShadow: {
         card:  '0 8px 30px rgba(0,0,0,0.07)',
         nav:   '0 1px 4px rgba(0,0,0,0.06)',

@@ -1,202 +1,228 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import api from '../services/api'
 import { CarCard } from '../components/ui'
-import { getCars } from '../services/api'
+import { Input } from '../components/ui'
 
-const CATEGORIES = [
-  { value:'suv',       label:'SUV' },
-  { value:'sedan',     label:'Sedan' },
-  { value:'hatch',     label:'Hatch' },
-  { value:'esportivo', label:'Esportivo' },
-  { value:'eletrico',  label:'Elétrico' },
-  { value:'picape',    label:'Picape' },
-]
-const FUELS = ['Gasolina','Flex','Elétrico','Híbrido','Diesel']
-const SORT_OPTIONS = [
-  { value:'popular',   label:'Mais populares' },
-  { value:'price_asc', label:'Menor preço' },
-  { value:'hp_desc',   label:'Maior potência' },
-  { value:'acc',       label:'Melhor aceleração' },
+const combustiveis = [
+  { value: 'flex',     label: 'Flex' },
+  { value: 'gasolina', label: 'Gasolina' },
+  { value: 'diesel',   label: 'Diesel' },
+  { value: 'eletrico', label: 'Elétrico' },
+  { value: 'hibrido',  label: 'Híbrido' },
 ]
 
-export function Catalog() {
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-
-  const [cars,    setCars]    = useState([])
-  const [loading, setLoading] = useState(true)
-  const [brand,    setBrand]    = useState(searchParams.get('marca') || '')
-  const [category, setCategory] = useState(searchParams.get('cat')   || '')
-  const [fuel,     setFuel]     = useState('')
-  const [maxPrice, setMaxPrice] = useState('')
-  const [sort,     setSort]     = useState('popular')
-  const [search,   setSearch]   = useState(searchParams.get('q') || '')
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-
-  useEffect(() => {
-    getCars()
-      .then(data => { setCars(data); setLoading(false) })
-      .catch(() => setLoading(false))
-  }, [])
-
-  const brands = useMemo(() => [...new Set(cars.map(c => c.brand))].sort(), [cars])
-
-  const filtered = useMemo(() => {
-    let list = [...cars]
-    if (search)   list = list.filter(c => `${c.brand} ${c.model}`.toLowerCase().includes(search.toLowerCase()))
-    if (brand)    list = list.filter(c => c.brand === brand)
-    if (category) list = list.filter(c => c.category === category)
-    if (fuel)     list = list.filter(c => c.fuel === fuel)
-    if (maxPrice) list = list.filter(c => c.price <= Number(maxPrice))
-    if (sort === 'price_asc') list.sort((a,b) => a.price - b.price)
-    if (sort === 'hp_desc')   list.sort((a,b) => (b.hp || 0) - (a.hp || 0))
-    if (sort === 'acc')       list.sort((a,b) => parseFloat(a.acc) - parseFloat(b.acc))
-    return list
-  }, [cars, search, brand, category, fuel, maxPrice, sort])
-
-  function clearFilters() {
-    setBrand(''); setCategory(''); setFuel(''); setMaxPrice(''); setSearch('')
-  }
-
-  const hasFilters = brand || category || fuel || maxPrice || search
-
-  const Filters = () => (
-    <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold uppercase tracking-widest text-on-surface">Filtros</h3>
-        {hasFilters && (
-          <button onClick={clearFilters} className="text-xs text-secondary font-semibold hover:underline">
-            Limpar tudo
-          </button>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <label className="text-[10px] font-bold tracking-widest uppercase text-on-surface-variant">Buscar</label>
-        <div className="relative">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none" style={{fontSize:16}}>search</span>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Marca ou modelo..."
-            className="w-full bg-surface-low rounded-lg py-2 pl-8 pr-3 text-sm text-on-surface outline-none focus:ring-2 focus:ring-primary-container/20 border border-transparent focus:border-primary-container" />
-        </div>
-      </div>
-
-      <FilterSelect label="Marca" value={brand} onChange={e => setBrand(e.target.value)}>
-        <option value="">Todas</option>
-        {brands.map(b => <option key={b} value={b}>{b}</option>)}
-      </FilterSelect>
-
-      <FilterSelect label="Categoria" value={category} onChange={e => setCategory(e.target.value)}>
-        <option value="">Todas</option>
-        {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-      </FilterSelect>
-
-      <FilterSelect label="Combustível" value={fuel} onChange={e => setFuel(e.target.value)}>
-        <option value="">Todos</option>
-        {FUELS.map(f => <option key={f} value={f}>{f}</option>)}
-      </FilterSelect>
-
-      <FilterSelect label="Preço até" value={maxPrice} onChange={e => setMaxPrice(e.target.value)}>
-        <option value="">Sem limite</option>
-        <option value="100000">R$ 100.000</option>
-        <option value="250000">R$ 250.000</option>
-        <option value="500000">R$ 500.000</option>
-        <option value="1000000">R$ 1.000.000</option>
-        <option value="2000000">R$ 2.000.000</option>
-      </FilterSelect>
-    </div>
-  )
-
+function FiltroSecao({ titulo, children }) {
   return (
-    <div className="min-h-screen bg-surface">
-
-      <div className="bg-white border-b border-outline-variant/50">
-        <div className="max-w-app mx-auto px-6 py-8">
-          <p className="text-[11px] font-bold tracking-widest uppercase text-primary-container mb-1">Catálogo</p>
-          <h1 className="text-3xl font-bold text-on-surface">Todos os veículos</h1>
-        </div>
-      </div>
-
-      <div className="max-w-app mx-auto px-6 py-8 flex gap-8">
-
-        <aside className="hidden lg:block w-64 shrink-0">
-          <div className="bg-white rounded-xl border border-outline-variant/50 p-5 sticky top-[90px]">
-            <Filters />
-          </div>
-        </aside>
-
-        <div className="flex-1 min-w-0">
-
-          <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
-            <span className="text-sm text-on-surface-variant font-medium">
-              <span className="font-bold text-on-surface">{loading ? '…' : filtered.length}</span> veículos encontrados
-            </span>
-            <div className="flex items-center gap-3">
-              <button onClick={() => setSidebarOpen(true)}
-                className="lg:hidden flex items-center gap-2 px-4 py-2 bg-white border border-outline-variant rounded-lg text-sm font-semibold text-on-surface hover:border-primary-container transition-colors">
-                <span className="material-symbols-outlined" style={{fontSize:16}}>tune</span>
-                Filtros {hasFilters && <span className="bg-secondary text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">!</span>}
-              </button>
-              <select value={sort} onChange={e => setSort(e.target.value)}
-                className="bg-white border border-outline-variant rounded-lg py-2 px-3 text-sm text-on-surface outline-none cursor-pointer focus:border-primary-container">
-                {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="flex items-center justify-center py-24">
-              <span className="text-on-surface-variant text-sm">Carregando veículos...</span>
-            </div>
-          ) : filtered.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filtered.map(car => (
-                <CarCard key={car.id} car={{...car, price: car.priceLabel}} />
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-24 gap-4">
-              <span className="material-symbols-outlined text-outline-variant" style={{fontSize:56}}>search_off</span>
-              <p className="text-on-surface-variant font-medium">Nenhum veículo encontrado</p>
-              <button onClick={clearFilters} className="text-sm font-semibold text-primary-container hover:underline">
-                Limpar filtros
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {sidebarOpen && (
-        <>
-          <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
-          <div className="fixed inset-y-0 left-0 w-80 bg-white z-50 lg:hidden shadow-float overflow-y-auto">
-            <div className="flex items-center justify-between p-5 border-b border-outline-variant/50">
-              <span className="font-bold text-on-surface">Filtros</span>
-              <button onClick={() => setSidebarOpen(false)} className="p-1 hover:bg-surface-low rounded-full transition-colors">
-                <span className="material-symbols-outlined" style={{fontSize:20}}>close</span>
-              </button>
-            </div>
-            <div className="p-5">
-              <Filters />
-              <button onClick={() => setSidebarOpen(false)}
-                className="mt-6 w-full bg-primary-container text-white py-3 rounded-lg font-semibold text-sm hover:bg-surface-tint transition-colors">
-                Ver {filtered.length} resultado{filtered.length !== 1 ? 's' : ''}
-              </button>
-            </div>
-          </div>
-        </>
-      )}
+    <div className="flex flex-col gap-3">
+      <p className="text-[10px] font-bold tracking-widest uppercase text-on-surface-variant">{titulo}</p>
+      {children}
     </div>
   )
 }
 
-function FilterSelect({ label, value, onChange, children }) {
+function FiltroOpcao({ label, ativo, onClick }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-[10px] font-bold tracking-widest uppercase text-on-surface-variant">{label}</label>
-      <select value={value} onChange={onChange}
-        className="w-full bg-surface-low rounded-lg py-2 px-3 text-sm text-on-surface outline-none cursor-pointer border border-transparent focus:border-primary-container focus:ring-2 focus:ring-primary-container/20">
-        {children}
-      </select>
+    <button
+      onClick={onClick}
+      className={`text-left text-sm px-3 py-2 rounded-lg transition-colors font-medium ${
+        ativo
+          ? 'bg-primary-container text-white'
+          : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
+      }`}
+    >
+      {label}
+    </button>
+  )
+}
+
+export function Catalog() {
+  const [searchParams] = useSearchParams()
+
+  const [carros, setCarros]         = useState([])
+  const [marcas, setMarcas]         = useState([])
+  const [categorias, setCategorias] = useState([])
+  const [carregando, setCarregando] = useState(true)
+
+  const [busca,       setBusca]      = useState(searchParams.get('q') || '')
+  const [marca,       setMarca]      = useState('')
+  const [categoria,   setCategoria]  = useState('')
+  const [combustivel, setCombustivel] = useState('')
+
+  const [sidebarAberta, setSidebarAberta] = useState(false)
+
+  useEffect(() => {
+    api.get('/carros/marcas/todas').then(res => setMarcas(res.data)).catch(console.error)
+    api.get('/carros/categorias/todas').then(res => setCategorias(res.data)).catch(console.error)
+  }, [])
+
+  useEffect(() => {
+    setCarregando(true)
+    const params = {}
+    if (busca)       params.busca       = busca
+    if (marca)       params.marca       = marca
+    if (categoria)   params.categoria   = categoria
+    if (combustivel) params.combustivel = combustivel
+
+    api.get('/carros', { params })
+      .then(res => setCarros(res.data))
+      .catch(console.error)
+      .finally(() => setCarregando(false))
+  }, [busca, marca, categoria, combustivel])
+
+  function limparFiltros() {
+    setMarca('')
+    setCategoria('')
+    setCombustivel('')
+    setBusca('')
+  }
+
+  const temFiltro = marca || categoria || combustivel || busca
+
+  const sidebar = (
+    <aside className="flex flex-col gap-6 w-64 shrink-0">
+      <div className="bg-white rounded-2xl shadow-card p-5 flex flex-col gap-5">
+
+        {/* Busca */}
+        <FiltroSecao titulo="Pesquisar">
+          <Input
+            icon="search"
+            placeholder="Marca ou modelo..."
+            value={busca}
+            onChange={e => setBusca(e.target.value)}
+          />
+        </FiltroSecao>
+
+        <hr className="border-outline-variant" />
+
+        {/* Marcas */}
+        <FiltroSecao titulo="Marca">
+          <div className="flex flex-col gap-1 max-h-48 overflow-y-auto pr-1">
+            <FiltroOpcao label="Todas" ativo={!marca} onClick={() => setMarca('')} />
+            {marcas.map(m => (
+              <FiltroOpcao
+                key={m.id}
+                label={m.nome}
+                ativo={marca === m.id}
+                onClick={() => setMarca(marca === m.id ? '' : m.id)}
+              />
+            ))}
+          </div>
+        </FiltroSecao>
+
+        <hr className="border-outline-variant" />
+
+        {/* Categorias */}
+        <FiltroSecao titulo="Categoria">
+          <div className="flex flex-col gap-1">
+            <FiltroOpcao label="Todas" ativo={!categoria} onClick={() => setCategoria('')} />
+            {categorias.map(c => (
+              <FiltroOpcao
+                key={c.id}
+                label={c.nome}
+                ativo={categoria === c.id}
+                onClick={() => setCategoria(categoria === c.id ? '' : c.id)}
+              />
+            ))}
+          </div>
+        </FiltroSecao>
+
+        <hr className="border-outline-variant" />
+
+        {/* Combustível */}
+        <FiltroSecao titulo="Combustível">
+          <div className="flex flex-col gap-1">
+            <FiltroOpcao label="Todos" ativo={!combustivel} onClick={() => setCombustivel('')} />
+            {combustiveis.map(c => (
+              <FiltroOpcao
+                key={c.value}
+                label={c.label}
+                ativo={combustivel === c.value}
+                onClick={() => setCombustivel(combustivel === c.value ? '' : c.value)}
+              />
+            ))}
+          </div>
+        </FiltroSecao>
+
+        {/* Limpar */}
+        {temFiltro && (
+          <>
+            <hr className="border-outline-variant" />
+            <button
+              onClick={limparFiltros}
+              className="text-sm text-secondary font-semibold hover:underline text-left"
+            >
+              Limpar filtros
+            </button>
+          </>
+        )}
+      </div>
+    </aside>
+  )
+
+  return (
+    <div className="max-w-app mx-auto px-6 py-10 flex flex-col gap-6">
+
+      {/* Cabeçalho */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-black text-on-surface">Catálogo</h1>
+          <p className="text-on-surface-variant text-sm mt-1">
+            {carregando ? 'Buscando...' : `${carros.length} carro${carros.length !== 1 ? 's' : ''} encontrado${carros.length !== 1 ? 's' : ''}`}
+          </p>
+        </div>
+
+        {/* Botão filtros mobile */}
+        <button
+          onClick={() => setSidebarAberta(v => !v)}
+          className="md:hidden flex items-center gap-2 px-4 py-2 bg-white border border-outline-variant rounded-lg text-sm font-semibold text-on-surface shadow-card"
+        >
+          <span className="material-symbols-outlined text-[18px]">tune</span>
+          Filtros
+        </button>
+      </div>
+
+      <div className="flex gap-8 items-start">
+
+        {/* Sidebar desktop */}
+        <div className="hidden md:block">{sidebar}</div>
+
+        {/* Sidebar mobile */}
+        {sidebarAberta && (
+          <div className="md:hidden fixed inset-0 z-50 flex">
+            <div className="absolute inset-0 bg-black/30" onClick={() => setSidebarAberta(false)} />
+            <div className="relative z-10 bg-surface w-72 h-full overflow-y-auto p-5 flex flex-col gap-5 shadow-float">
+              <div className="flex items-center justify-between">
+                <p className="font-bold text-on-surface">Filtros</p>
+                <button onClick={() => setSidebarAberta(false)}>
+                  <span className="material-symbols-outlined text-on-surface-variant">close</span>
+                </button>
+              </div>
+              {sidebar}
+            </div>
+          </div>
+        )}
+
+        {/* Grid de carros */}
+        <div className="flex-1">
+          {carregando ? (
+            <p className="text-center text-on-surface-variant py-16">Carregando...</p>
+          ) : carros.length === 0 ? (
+            <div className="flex flex-col items-center py-20 gap-3 text-on-surface-variant">
+              <span className="material-symbols-outlined text-outline-variant" style={{ fontSize: 56 }}>search_off</span>
+              <p className="text-sm">Nenhum carro encontrado com esses filtros.</p>
+              <button onClick={limparFiltros} className="text-sm text-primary-container font-semibold hover:underline">
+                Limpar filtros
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+              {carros.map(car => <CarCard key={car.id} car={car} />)}
+            </div>
+          )}
+        </div>
+
+      </div>
     </div>
   )
 }

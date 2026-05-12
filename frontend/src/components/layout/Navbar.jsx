@@ -1,18 +1,28 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
+function useUsuario() {
+  const raw = localStorage.getItem('usuario')
+  return raw ? JSON.parse(raw) : null
+}
+
+function sair(navigate) {
+  localStorage.removeItem('token')
+  localStorage.removeItem('usuario')
+  navigate('/')
+  window.location.reload()
+}
+
 const links = [
-  { label: 'Início',    path: '/' },
-  { label: 'Catálogo',  path: '/catalogo' },
-  { label: 'Comparar',  path: '/comparar' },
-  { label: 'Marcas',    path: '/catalogo' },
+  { label: 'Início', path: '/' },
 ]
 
 export function Navbar() {
-  const navigate = useNavigate()
+  const navigate  = useNavigate()
   const { pathname } = useLocation()
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [searchOpen, setSearchOpen] = useState(false)
+  const usuario   = useUsuario()
+  const [menuOpen, setMenuOpen]       = useState(false)
+  const [searchOpen, setSearchOpen]   = useState(false)
   const [searchValue, setSearchValue] = useState('')
 
   function handleSearch(e) {
@@ -76,6 +86,23 @@ export function Navbar() {
               <span className="material-symbols-outlined text-[20px]">compare_arrows</span>
               <span className="text-sm font-semibold tracking-wide hidden lg:block">Comparar</span>
             </button>
+            {usuario && (
+              <button onClick={() => navigate('/favoritos')} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-on-surface-variant hover:text-on-surface">
+                <span className="material-symbols-outlined text-[20px]">favorite</span>
+              </button>
+            )}
+            {usuario ? (
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold text-on-surface">Olá, {usuario.nome.split(' ')[0]}</span>
+                <button onClick={() => sair(navigate)} className="px-5 py-2 border border-outline-variant text-on-surface text-sm font-semibold tracking-wide rounded-lg hover:bg-surface-low transition-colors active:scale-95">
+                  Sair
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => navigate('/login')} className="px-5 py-2 border border-outline-variant text-on-surface text-sm font-semibold tracking-wide rounded-lg hover:bg-surface-low transition-colors active:scale-95">
+                Entrar
+              </button>
+            )}
             <button onClick={() => navigate('/catalogo')} className="ml-2 px-5 py-2 bg-slate-950 text-white text-sm font-semibold tracking-wide rounded-lg hover:bg-slate-700 transition-colors active:scale-95">
               Ver Catálogo
             </button>

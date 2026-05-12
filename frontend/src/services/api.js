@@ -2,5 +2,10 @@ import axios from 'axios'
 
 const api = axios.create({ baseURL: '/api' })
 
-export const getCars    = ()   => api.get('/cars').then(r => r.data)
-export const getCarById = (id) => api.get(`/cars/${id}`).then(r => r.data)
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('token')
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
+})
+
+export default api

@@ -1,197 +1,133 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Button, Badge, SpecCard } from '../components/ui'
-import { getCarById } from '../services/api'
+import api from '../services/api'
+import { Badge, Button, SpecCard } from '../components/ui'
 
-const PERF_BARS = (car) => [
-  { label:'Potência',   value: car.hp       ? Math.min(Number(car.hp) / 700 * 100, 100)                      : 0 },
-  { label:'Aceleração', value: car.acc      ? Math.max(100 - (parseFloat(car.acc) / 12 * 100), 10)           : 0 },
-  { label:'Velocidade', value: car.topSpeed ? Math.min(parseInt(car.topSpeed) / 350 * 100, 100)               : 0 },
-]
+function formatarPreco(preco) {
+  return Number(preco).toLocaleString('pt-BR', {
+    style: 'currency', currency: 'BRL', maximumFractionDigits: 0
+  })
+}
+
+const combustivelLabel = {
+  flex: 'Flex', gasolina: 'Gasolina', diesel: 'Diesel',
+  eletrico: 'Elétrico', hibrido: 'Híbrido',
+}
 
 export function Detail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const [car, setCar]       = useState(null)
-  const [loading, setLoading] = useState(true)
+
+  const [carro, setCarro]           = useState(null)
+  const [carregando, setCarregando] = useState(true)
+  const [favoritado, setFavoritado] = useState(false)
+  const [msgFav, setMsgFav]         = useState('')
+
+  const usuario = localStorage.getItem('usuario')
 
   useEffect(() => {
-    getCarById(id)
-      .then(data => { setCar(data); setLoading(false) })
-      .catch(() => setLoading(false))
+    api.get(`/carros/${id}`)
+      .then(res => setCarro(res.data))
+      .catch(() => navigate('/catalogo'))
+      .finally(() => setCarregando(false))
   }, [id])
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <span className="text-on-surface-variant text-sm">Carregando...</span>
-    </div>
-  )
+  async function toggleFavorito() {
+    if (!usuario) { navigate('/login'); return }
 
-  if (!car) return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-      <span className="material-symbols-outlined text-outline-variant" style={{fontSize:56}}>directions_car</span>
-      <p className="text-on-surface-variant font-medium">Veículo não encontrado</p>
-      <Button variant="primary" onClick={() => navigate('/catalogo')}>Ver catálogo</Button>
-    </div>
-  )
+    try {
+      if (favoritado) {
+        await api.delete(`/favoritos/${id}`)
+        setFavoritado(false)
+        setMsgFav('Removido dos favoritos.')
+      } else {
+        await api.post('/favoritos', { carro_id: id })
+        setFavoritado(true)
+        setMsgFav('Adicionado aos favoritos!')
+      }
+    } catch (err) {
+      setMsgFav(err.response?.data?.erro || 'Erro ao atualizar favoritos.')
+    }
+    setTimeout(() => setMsgFav(''), 3000)
+  }
 
-  const perfBars = PERF_BARS(car)
+  if (carregando) return <p className="text-center py-24 text-on-surface-variant">Carregando...</p>
+  if (!carro) return null
 
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="max-w-app mx-auto px-4 sm:px-6 py-8 sm:py-10 flex flex-col gap-6 sm:gap-8">
 
-      {/* Hero */}
-      <section className="w-full py-12" style={{background:`linear-gradient(135deg, ${car.bg} 0%, #f8f9ff 100%)`}}>
-        <div className="max-w-app mx-auto px-6">
-          <button onClick={() => navigate('/catalogo')} className="flex items-center gap-1 text-sm text-on-surface-variant hover:text-on-surface mb-6 transition-colors">
-            <span className="material-symbols-outlined" style={{fontSize:16}}>arrow_back</span> Voltar ao catálogo
-          </button>
-          <div className="flex flex-col lg:flex-row items-center gap-12">
-            <div className="flex-1 flex items-center justify-center min-h-[220px]">
-              {car.imagemUrl
-                ? <img src={car.imagemUrl} alt={`${car.brand} ${car.model}`} className="w-full max-w-md object-contain max-h-64" />
-                : <svg viewBox="0 0 500 260" className="w-full max-w-md opacity-20" fill="#0b1c30">
-                    <path d="M40 190 Q40 150 80 140 L150 110 Q190 80 240 75 L360 75 Q420 76 450 130 L470 180 Q475 195 465 200 L50 200 Q40 200 40 190Z"/>
-                    <ellipse cx="120" cy="200" rx="38" ry="38"/>
-                    <ellipse cx="370" cy="200" rx="38" ry="38"/>
-                    <rect x="160" y="85" width="160" height="55" rx="12"/>
-                  </svg>
-              }
-            </div>
-            <div className="flex-1 flex flex-col gap-4">
-              <Badge variant={car.fuel === 'Elétrico' ? 'electric' : car.fuel === 'Híbrido' ? 'success' : 'default'}>
-                {car.fuel}
+      {/* Voltar */}
+      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-on-surface-variant hover:text-on-surface transition-colors w-fit">
+        <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+        Voltar
+      </button>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 items-start">
+
+        {/* Imagem */}
+        <div className="bg-surface-container rounded-2xl overflow-hidden flex items-center justify-center aspect-video w-full">
+          {carro.imagem_url
+            ? <img src={carro.imagem_url} alt={carro.modelo} className="w-full h-full object-cover" />
+            : <span className="material-symbols-outlined text-outline-variant" style={{ fontSize: 96 }}>directions_car</span>
+          }
+        </div>
+
+        {/* Info */}
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="default">{carro.categoria}</Badge>
+              <Badge variant={carro.combustivel === 'eletrico' ? 'electric' : carro.combustivel === 'hibrido' ? 'warning' : 'default'}>
+                {combustivelLabel[carro.combustivel] || carro.combustivel}
               </Badge>
-              <div>
-                <p className="text-sm font-bold tracking-widest uppercase text-on-surface-variant">{car.brand}</p>
-                <h1 className="text-4xl font-black tracking-tight text-on-surface">{car.model}</h1>
-              </div>
-              <p className="text-3xl font-bold text-on-surface">{car.priceLabel}</p>
-              <div className="flex gap-3 flex-wrap">
-                <Button variant="primary" size="lg" onClick={() => navigate('/comparar')}>
-                  Comparar veículo
-                </Button>
-                <Button variant="outline" size="lg" onClick={() => navigate('/catalogo')}>
-                  Ver catálogo
-                </Button>
+            </div>
+            <p className="text-xs sm:text-sm font-bold tracking-widest uppercase text-on-surface-variant">{carro.marca}</p>
+            <h1 className="text-2xl sm:text-3xl font-black text-on-surface">{carro.modelo}</h1>
+            <p className="text-2xl sm:text-3xl font-black text-primary-container">{formatarPreco(carro.preco)}</p>
+          </div>
+
+          {/* Specs básicos */}
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <SpecCard icon="calendar_today"     label="Ano"        value={carro.ano} />
+            <SpecCard icon="local_gas_station"  label="Combustível" value={combustivelLabel[carro.combustivel] || carro.combustivel} />
+            <SpecCard icon="category"           label="Categoria"  value={carro.categoria} />
+            <SpecCard icon="public"             label="Origem"     value={carro.pais_origem || '—'} />
+          </div>
+
+          {/* Specs técnicos */}
+          {(carro.potencia || carro.torque || carro.motor) && (
+            <div className="flex flex-col gap-2 sm:gap-3">
+              <p className="text-xs font-bold tracking-widest uppercase text-on-surface-variant">Especificações técnicas</p>
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                {carro.motor             && <SpecCard icon="settings"          label="Motor"        value={carro.motor} />}
+                {carro.potencia          && <SpecCard icon="bolt"              label="Potência"     value={carro.potencia} />}
+                {carro.torque            && <SpecCard icon="rotate_right"      label="Torque"       value={carro.torque} />}
+                {carro.consumo           && <SpecCard icon="local_gas_station" label="Consumo"      value={carro.consumo} />}
+                {carro.zero_cem          && <SpecCard icon="speed"             label="0–100 km/h"   value={carro.zero_cem} />}
+                {carro.velocidade_maxima && <SpecCard icon="straighten"        label="Vel. máxima"  value={carro.velocidade_maxima} />}
               </div>
             </div>
+          )}
+
+          {/* Ações */}
+          <div className="flex flex-col gap-3">
+            <Button
+              variant={favoritado ? 'outline' : 'primary'}
+              icon={favoritado ? 'heart_minus' : 'favorite'}
+              iconPosition="left"
+              onClick={toggleFavorito}
+            >
+              {favoritado ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+            </Button>
+            <Button variant="secondary" icon="compare_arrows" iconPosition="left" onClick={() => navigate('/comparar')}>
+              Comparar
+            </Button>
+            {msgFav && <p className="text-sm text-center text-on-surface-variant">{msgFav}</p>}
           </div>
         </div>
-      </section>
 
-      <div className="max-w-app mx-auto px-6 py-12 flex flex-col gap-12">
-
-        {/* Specs rápidas */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <SpecCard icon="speed"             label="0–100 km/h" value={car.acc      || '—'} />
-          <SpecCard icon="flash_on"          label="Potência"   value={car.hp ? `${car.hp} cv` : '—'} />
-          <SpecCard icon="rotate_right"      label="Torque"     value={car.torque   || '—'} />
-          <SpecCard icon="local_gas_station" label="Consumo"    value={car.cons     || '—'} />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 flex flex-col gap-8">
-
-            {/* Especificações técnicas */}
-            <Card title="Especificações Técnicas">
-              <div className="divide-y divide-outline-variant/40">
-                {[
-                  ['Motor',       car.engine                    ],
-                  ['Potência',    car.hp ? `${car.hp} cv` : null],
-                  ['Torque',      car.torque                    ],
-                  ['Transmissão', car.trans                     ],
-                  ['Tração',      car.drive                     ],
-                  ['Combustível', car.fuel                      ],
-                  ['0–100 km/h',  car.acc                       ],
-                  ['Vel. máxima', car.topSpeed                  ],
-                  ['Consumo',     car.cons                      ],
-                ].map(([label, value]) => (
-                  <div key={label} className="flex justify-between py-3">
-                    <span className="text-sm text-on-surface-variant">{label}</span>
-                    <span className="text-sm font-semibold text-on-surface">{value || '—'}</span>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            {/* Dimensões */}
-            <Card title="Dimensões">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {[
-                  ['Comprimento', car.length],
-                  ['Largura',     car.width ],
-                  ['Altura',      car.height],
-                  ['Porta-malas', car.trunk ],
-                ].map(([label, value]) => (
-                  <div key={label} className="bg-surface-low rounded-xl p-4 flex flex-col gap-1">
-                    <span className="text-[10px] font-bold tracking-widest uppercase text-on-surface-variant">{label}</span>
-                    <span className="text-base font-bold text-on-surface">{value || '—'}</span>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-          </div>
-
-          <div className="flex flex-col gap-8">
-
-            {/* Performance */}
-            <Card title="Performance">
-              <div className="flex flex-col gap-5">
-                {perfBars.map(bar => (
-                  <div key={bar.label} className="flex flex-col gap-2">
-                    <div className="flex justify-between">
-                      <span className="text-xs font-semibold text-on-surface-variant">{bar.label}</span>
-                      <span className="text-xs font-bold text-on-surface">{Math.round(bar.value)}%</span>
-                    </div>
-                    <div className="h-2 bg-surface-container rounded-full overflow-hidden">
-                      <div className="h-full bg-primary-container rounded-full transition-all duration-700"
-                        style={{width:`${bar.value}%`}} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            {car.pros.length > 0 && (
-              <Card title="Pontos Positivos">
-                <ul className="flex flex-col gap-2">
-                  {car.pros.map(p => (
-                    <li key={p} className="flex items-start gap-2 text-sm text-on-surface">
-                      <span className="material-symbols-outlined text-green-600 shrink-0" style={{fontSize:16}}>check_circle</span>
-                      {p}
-                    </li>
-                  ))}
-                </ul>
-              </Card>
-            )}
-
-            {car.negatives.length > 0 && (
-              <Card title="Pontos Negativos">
-                <ul className="flex flex-col gap-2">
-                  {car.negatives.map(c => (
-                    <li key={c} className="flex items-start gap-2 text-sm text-on-surface">
-                      <span className="material-symbols-outlined text-secondary shrink-0" style={{fontSize:16}}>cancel</span>
-                      {c}
-                    </li>
-                  ))}
-                </ul>
-              </Card>
-            )}
-
-          </div>
-        </div>
       </div>
-    </div>
-  )
-}
-
-function Card({ title, children }) {
-  return (
-    <div className="bg-white rounded-xl border border-outline-variant/50 p-6 flex flex-col gap-4">
-      <h2 className="text-sm font-bold uppercase tracking-widest text-on-surface border-b border-outline-variant/50 pb-3">{title}</h2>
-      {children}
     </div>
   )
 }
