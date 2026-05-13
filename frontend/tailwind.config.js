@@ -1,22 +1,23 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        'surface':                   '#f8f9ff',
-        'surface-high':              '#dce9ff',
-        'surface-container':         '#e5eeff',
-        'surface-low':               '#eff4ff',
-        'surface-dim':               '#cbdbf5',
-        'surface-tint':              '#585c7d',
-        'on-surface':                '#0b1c30',
-        'on-surface-variant':        '#46464d',
-        'primary-container':         '#141936',
-        'on-primary-container':      '#7d82a5',
-        'secondary':                 '#b7102a',
-        'outline':                   '#77767e',
-        'outline-variant':           '#c7c5ce',
+        'surface':              'var(--color-surface)',
+        'surface-high':         'var(--color-surface-high)',
+        'surface-container':    'var(--color-surface-container)',
+        'surface-low':          'var(--color-surface-low)',
+        'surface-dim':          'var(--color-surface-dim)',
+        'surface-tint':         'var(--color-surface-tint)',
+        'on-surface':           'var(--color-on-surface)',
+        'on-surface-variant':   'var(--color-on-surface-variant)',
+        'primary-container':    'var(--color-primary-container)',
+        'on-primary-container': 'var(--color-on-primary-container)',
+        'secondary':            'var(--color-secondary)',
+        'outline':              'var(--color-outline)',
+        'outline-variant':      'var(--color-outline-variant)',
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],

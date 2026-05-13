@@ -1,4 +1,7 @@
+import { useTitulo } from '../hooks/useTitulo'
+
 export function Termos() {
+  useTitulo('Termos de Uso')
   const secoes = [
     {
       titulo: '1. Aceitação dos Termos',
@@ -27,7 +30,7 @@ export function Termos() {
   ]
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-16 flex flex-col gap-10">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-16 flex flex-col gap-10">
       <div>
         <h1 className="text-3xl font-black text-on-surface">Termos de Uso</h1>
         <p className="text-on-surface-variant text-sm mt-2">Última atualização: maio de 2026.</p>

@@ -5,6 +5,7 @@ import authRoutes     from './routes/auth.js'
 import carrosRoutes   from './routes/carros.js'
 import favoritosRoutes from './routes/favoritos.js'
 import contatoRoutes   from './routes/contato.js'
+import votosRoutes     from './routes/votos.js'
 
 const app  = express()
 const PORT = process.env.PORT || 3001
@@ -16,6 +17,7 @@ app.use('/api/auth',      authRoutes)
 app.use('/api/carros',   carrosRoutes)
 app.use('/api/favoritos', favoritosRoutes)
 app.use('/api/contato',  contatoRoutes)
+app.use('/api/votos',    votosRoutes)
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', mensagem: 'Servidor CarCompare rodando' })

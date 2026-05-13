@@ -1,4 +1,7 @@
+import { useTitulo } from '../hooks/useTitulo'
+
 export function Ajuda() {
+  useTitulo('Central de Ajuda')
   const topicos = [
     {
       pergunta: 'Como comparar dois carros?',
@@ -27,7 +30,7 @@ export function Ajuda() {
   ]
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-16 flex flex-col gap-10">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-16 flex flex-col gap-10">
       <div>
         <h1 className="text-3xl font-black text-on-surface">Central de Ajuda</h1>
         <p className="text-on-surface-variant text-sm mt-2">Encontre respostas para as dúvidas mais comuns sobre o CarCompare.</p>
@@ -35,7 +38,7 @@ export function Ajuda() {
 
       <div className="flex flex-col gap-4">
         {topicos.map((t, i) => (
-          <div key={i} className="bg-white rounded-2xl shadow-card p-6 flex flex-col gap-2">
+          <div key={i} className="bg-white dark:bg-surface-container rounded-2xl shadow-card p-6 flex flex-col gap-2">
             <h2 className="font-bold text-on-surface text-[15px]">{t.pergunta}</h2>
             <p className="text-sm text-on-surface-variant leading-relaxed">{t.resposta}</p>
           </div>

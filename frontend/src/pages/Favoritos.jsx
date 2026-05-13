@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { CarCard, Button } from '../components/ui'
+import { useTitulo } from '../hooks/useTitulo'
 
 export function Favoritos() {
+  useTitulo('Favoritos')
   const navigate = useNavigate()
   const [favoritos, setFavoritos] = useState([])
   const [carregando, setCarregando] = useState(true)
@@ -29,10 +31,10 @@ export function Favoritos() {
   }
 
   return (
-    <div className="max-w-app mx-auto px-6 py-10 flex flex-col gap-8">
+    <div className="max-w-app mx-auto px-4 sm:px-6 py-8 sm:py-10 flex flex-col gap-8">
 
       <div>
-        <h1 className="text-3xl font-black text-on-surface">Meus Favoritos</h1>
+        <h1 className="text-2xl sm:text-3xl font-black text-on-surface">Meus Favoritos</h1>
         <p className="text-on-surface-variant text-sm mt-1">
           {carregando ? 'Carregando...' : `${favoritos.length} carro${favoritos.length !== 1 ? 's' : ''} salvo${favoritos.length !== 1 ? 's' : ''}`}
         </p>
@@ -55,7 +57,7 @@ export function Favoritos() {
               <CarCard car={f} />
               <button
                 onClick={() => remover(f.id)}
-                className="absolute top-3 right-3 bg-white rounded-full p-1.5 shadow-card opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
+                className="absolute top-3 right-3 bg-white dark:bg-surface-container rounded-full p-1.5 shadow-card opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
                 title="Remover dos favoritos"
               >
                 <span className="material-symbols-outlined text-secondary" style={{ fontSize: 18 }}>heart_minus</span>

@@ -4,13 +4,14 @@ import { Home }         from './pages/Home'
 import { Catalog }      from './pages/Catalog'
 import { Detail }       from './pages/Detail'
 import { Compare }      from './pages/Compare'
-import { DesignSystem } from './pages/DesignSystem'
+
 import { Login }        from './pages/Login'
 import { Favoritos }    from './pages/Favoritos'
 import { Ajuda }        from './pages/Ajuda'
 import { Contato }      from './pages/Contato'
 import { Termos }       from './pages/Termos'
 import { Privacidade }  from './pages/Privacidade'
+import { Ranking }      from './pages/Ranking'
 
 export default function App() {
   return (
@@ -25,7 +26,8 @@ export default function App() {
         <Route path="/contato"       element={<Contato />} />
         <Route path="/termos"        element={<Termos />} />
         <Route path="/privacidade"   element={<Privacidade />} />
-        <Route path="/design-system" element={<DesignSystem />} />
+        <Route path="/ranking"       element={<Ranking />} />
+
         <Route path="/login"         element={<Login />} />
       </Routes>
     </Layout>

@@ -5,6 +5,40 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Tema claro (padrão) ── */
+:root {
+  --color-surface:              #f8f9ff;
+  --color-surface-high:         #dce9ff;
+  --color-surface-container:    #e5eeff;
+  --color-surface-low:          #eff4ff;
+  --color-surface-dim:          #cbdbf5;
+  --color-surface-tint:         #585c7d;
+  --color-on-surface:           #0b1c30;
+  --color-on-surface-variant:   #46464d;
+  --color-primary-container:    #141936;
+  --color-on-primary-container: #7d82a5;
+  --color-secondary:            #b7102a;
+  --color-outline:              #77767e;
+  --color-outline-variant:      #c7c5ce;
+}
+
+/* ── Tema escuro ── */
+.dark {
+  --color-surface:              #0f1117;
+  --color-surface-high:         #1c2333;
+  --color-surface-container:    #161b27;
+  --color-surface-low:          #13181f;
+  --color-surface-dim:          #0a0d14;
+  --color-surface-tint:         #8892b0;
+  --color-on-surface:           #e2e8f0;
+  --color-on-surface-variant:   #8892b0;
+  --color-primary-container:    #818cf8;
+  --color-on-primary-container: #c7d2fe;
+  --color-secondary:            #f87171;
+  --color-outline:              #2d3748;
+  --color-outline-variant:      #1e2a3a;
+}
+
 @layer base {
   *, *::before, *::after { box-sizing: border-box; }
   html { scroll-behavior: smooth; }

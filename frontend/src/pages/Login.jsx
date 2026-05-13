@@ -53,13 +53,11 @@ export function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface px-4">
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-float p-8 flex flex-col gap-6">
+      <div className="w-full max-w-sm bg-white dark:bg-surface-container rounded-2xl shadow-float p-8 flex flex-col gap-6">
 
         {/* Logo */}
-        <div className="text-center">
-          <span className="text-2xl font-black tracking-tighter text-slate-950">
-            CAR<span className="text-primary-container">COMPARE</span>
-          </span>
+        <div className="flex flex-col items-center gap-1">
+          <img src="/logo.png" alt="CarCompare" className="h-12 w-auto object-contain dark:invert" />
           <p className="text-sm text-on-surface-variant mt-1">
             {modo === 'login' ? 'Entrar na sua conta' : 'Criar conta'}
           </p>

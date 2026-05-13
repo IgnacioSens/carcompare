@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { Input, Button } from '../components/ui'
 import api from '../services/api'
+import { useTitulo } from '../hooks/useTitulo'
 
 export function Contato() {
+  useTitulo('Contato')
   const [form, setForm]           = useState({ nome: '', email: '', mensagem: '' })
   const [enviado, setEnviado]     = useState(false)
   const [carregando, setCarregando] = useState(false)
@@ -29,7 +31,7 @@ export function Contato() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-6 py-16 flex flex-col gap-10">
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-16 flex flex-col gap-10">
       <div>
         <h1 className="text-3xl font-black text-on-surface">Contato</h1>
         <p className="text-on-surface-variant text-sm mt-2">
@@ -38,7 +40,7 @@ export function Contato() {
       </div>
 
       {enviado ? (
-        <div className="bg-white rounded-2xl shadow-card p-10 flex flex-col items-center gap-4 text-center">
+        <div className="bg-white dark:bg-surface-container rounded-2xl shadow-card p-10 flex flex-col items-center gap-4 text-center">
           <span className="material-symbols-outlined text-green-500" style={{ fontSize: 56 }}>check_circle</span>
           <h2 className="font-black text-on-surface text-xl">Mensagem enviada!</h2>
           <p className="text-sm text-on-surface-variant">Agradecemos o contato. Retornaremos em até 2 dias úteis.</p>
@@ -47,7 +49,7 @@ export function Contato() {
           </Button>
         </div>
       ) : (
-        <form onSubmit={enviar} className="bg-white rounded-2xl shadow-card p-8 flex flex-col gap-5">
+        <form onSubmit={enviar} className="bg-white dark:bg-surface-container rounded-2xl shadow-card p-8 flex flex-col gap-5">
           <Input
             label="Nome"
             placeholder="Seu nome completo"

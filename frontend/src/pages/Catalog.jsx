@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import api from '../services/api'
 import { CarCard } from '../components/ui'
 import { Input } from '../components/ui'
+import { useTitulo } from '../hooks/useTitulo'
 
 const combustiveis = [
   { value: 'flex',     label: 'Flex' },
@@ -37,6 +38,7 @@ function FiltroOpcao({ label, ativo, onClick }) {
 }
 
 export function Catalog() {
+  useTitulo('Catálogo')
   const [searchParams] = useSearchParams()
 
   const [carros, setCarros]         = useState([])
@@ -81,7 +83,7 @@ export function Catalog() {
 
   const sidebar = (
     <aside className="flex flex-col gap-6 w-64 shrink-0">
-      <div className="bg-white rounded-2xl shadow-card p-5 flex flex-col gap-5">
+      <div className="bg-white dark:bg-surface-container rounded-2xl shadow-card p-5 flex flex-col gap-5">
 
         {/* Busca */}
         <FiltroSecao titulo="Pesquisar">
@@ -161,12 +163,12 @@ export function Catalog() {
   )
 
   return (
-    <div className="max-w-app mx-auto px-6 py-10 flex flex-col gap-6">
+    <div className="max-w-app mx-auto px-4 sm:px-6 py-8 sm:py-10 flex flex-col gap-6">
 
       {/* Cabeçalho */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black text-on-surface">Catálogo</h1>
+          <h1 className="text-2xl sm:text-3xl font-black text-on-surface">Catálogo</h1>
           <p className="text-on-surface-variant text-sm mt-1">
             {carregando ? 'Buscando...' : `${carros.length} carro${carros.length !== 1 ? 's' : ''} encontrado${carros.length !== 1 ? 's' : ''}`}
           </p>
@@ -175,7 +177,7 @@ export function Catalog() {
         {/* Botão filtros mobile */}
         <button
           onClick={() => setSidebarAberta(v => !v)}
-          className="md:hidden flex items-center gap-2 px-4 py-2 bg-white border border-outline-variant rounded-lg text-sm font-semibold text-on-surface shadow-card"
+          className="md:hidden flex items-center gap-2 px-4 py-2 bg-white dark:bg-surface-container border border-outline-variant rounded-lg text-sm font-semibold text-on-surface shadow-card"
         >
           <span className="material-symbols-outlined text-[18px]">tune</span>
           Filtros

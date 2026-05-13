@@ -3,18 +3,25 @@ import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { CarCard } from '../components/ui'
 import { Button, Input } from '../components/ui'
+import { useTitulo } from '../hooks/useTitulo'
 
 export function Home() {
+  useTitulo('')
   const navigate = useNavigate()
-  const [carros, setCarros]     = useState([])
-  const [busca, setBusca]       = useState('')
+  const [carros, setCarros]         = useState([])
+  const [busca, setBusca]           = useState('')
   const [carregando, setCarregando] = useState(true)
+  const [recentes, setRecentes]     = useState([])
 
   useEffect(() => {
     api.get('/carros')
       .then(res => setCarros(res.data.slice(0, 6)))
       .catch(console.error)
       .finally(() => setCarregando(false))
+
+    // Carrega carros vistos recentemente do localStorage
+    const salvos = JSON.parse(localStorage.getItem('carros_recentes') || '[]')
+    setRecentes(salvos)
   }, [])
 
   function handleBusca(e) {
@@ -48,7 +55,7 @@ export function Home() {
             Compare carros de<br />forma inteligente
           </h1>
           <p className="text-lg max-w-xl drop-shadow" style={{ color: '#c5cae9' }}>
-            Explore mais de 50 modelos, filtre por marca, categoria e combustível e compare lado a lado.
+            Explore mais de 30 modelos, filtre por marca, categoria e combustível e compare lado a lado.
           </p>
           <form onSubmit={handleBusca} className="flex gap-2 w-full max-w-md">
             <Input
@@ -64,23 +71,23 @@ export function Home() {
       </section>
 
       {/* Stats */}
-      <section className="bg-surface-container py-8 px-6">
-        <div className="max-w-app mx-auto grid grid-cols-3 gap-4 text-center">
+      <section className="bg-surface-container py-8 px-4 sm:px-6">
+        <div className="max-w-app mx-auto grid grid-cols-3 gap-2 sm:gap-4 text-center">
           {[
-            { valor: '50+', label: 'Modelos' },
+            { valor: '30+', label: 'Modelos' },
             { valor: '20+', label: 'Marcas' },
             { valor: '6',   label: 'Categorias' },
           ].map(s => (
             <div key={s.label}>
-              <p className="text-2xl font-black text-primary-container">{s.valor}</p>
-              <p className="text-sm text-on-surface-variant font-medium">{s.label}</p>
+              <p className="text-xl sm:text-2xl font-black text-primary-container">{s.valor}</p>
+              <p className="text-xs sm:text-sm text-on-surface-variant font-medium">{s.label}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Destaques */}
-      <section className="py-16 px-6">
+      <section className="py-10 sm:py-16 px-4 sm:px-6">
         <div className="max-w-app mx-auto flex flex-col gap-8">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-black text-on-surface">Destaques</h2>
@@ -104,6 +111,26 @@ export function Home() {
           </div>
         </div>
       </section>
+
+      {/* Vistos recentemente */}
+      {recentes.length > 0 && (
+        <section className="py-10 sm:py-16 px-4 sm:px-6 bg-surface-container">
+          <div className="max-w-app mx-auto flex flex-col gap-8">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-black text-on-surface">Vistos recentemente</h2>
+              <button
+                onClick={() => { localStorage.removeItem('carros_recentes'); setRecentes([]) }}
+                className="text-xs text-on-surface-variant hover:text-secondary transition-colors font-medium"
+              >
+                Limpar histórico
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+              {recentes.map(car => <CarCard key={car.id} car={car} />)}
+            </div>
+          </div>
+        </section>
+      )}
 
     </div>
   )

@@ -26,7 +26,7 @@ export function CarCard({ car }) {
   return (
     <div
       onClick={() => navigate(`/carros/${car.id}`)}
-      className="bg-white rounded-2xl shadow-card overflow-hidden cursor-pointer hover:-translate-y-1 transition-transform group"
+      className="bg-white dark:bg-surface-container rounded-2xl shadow-card overflow-hidden cursor-pointer hover:-translate-y-1 transition-transform group"
     >
       <div className="h-44 bg-surface-container flex items-center justify-center overflow-hidden">
         {car.imagem_url
