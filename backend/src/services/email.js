@@ -1,20 +1,23 @@
-import nodemailer from 'nodemailer'
-
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: Number(process.env.EMAIL_PORT),
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-})
+import axios from 'axios'
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://carcompare.vercel.app'
 
+async function enviar({ to, subject, html }) {
+  await axios.post('https://api.brevo.com/v3/smtp/email', {
+    sender:   { name: 'CarCompare', email: process.env.EMAIL_USER },
+    to:       [{ email: to }],
+    subject,
+    htmlContent: html,
+  }, {
+    headers: {
+      'api-key':      process.env.BREVO_API_KEY,
+      'Content-Type': 'application/json',
+    }
+  })
+}
+
 export async function enviarEmailBoasVindas(email, nome) {
-  await transporter.sendMail({
-    from:    `"CarCompare" <${process.env.EMAIL_USER}>`,
+  await enviar({
     to:      email,
     subject: 'Bem-vindo ao CarCompare!',
     html: `
@@ -40,8 +43,7 @@ export async function enviarEmailBoasVindas(email, nome) {
 }
 
 export async function enviarEmailContato(nome, email, mensagem) {
-  await transporter.sendMail({
-    from:    `"CarCompare" <${process.env.EMAIL_USER}>`,
+  await enviar({
     to:      process.env.EMAIL_DESTINO,
     subject: `Nova mensagem de contato — ${nome}`,
     html: `
