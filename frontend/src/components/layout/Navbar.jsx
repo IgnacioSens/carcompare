@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import api from '../../services/api'
 
 function useUsuario() {
   const raw = localStorage.getItem('usuario')
@@ -26,23 +27,107 @@ function sair(navigate) {
 
 const links = []
 
+// Componente de busca com autocomplete
+function SearchInput({ onClose, className = '' }) {
+  const navigate = useNavigate()
+  const [valor, setValor]         = useState('')
+  const [todos, setTodos]         = useState([])
+  const [aberto, setAberto]       = useState(false)
+  const ref                       = useRef(null)
+
+  // Busca lista de carros uma vez
+  useEffect(() => {
+    api.get('/carros').then(r => setTodos(r.data)).catch(() => {})
+  }, [])
+
+  // Fecha ao clicar fora
+  useEffect(() => {
+    function handler(e) {
+      if (ref.current && !ref.current.contains(e.target)) setAberto(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const sugestoes = valor.trim().length === 0 ? [] : todos.filter(c => {
+    const termo = valor.toLowerCase()
+    return c.modelo.toLowerCase().includes(termo) || c.marca.toLowerCase().includes(termo)
+  }).slice(0, 8)
+
+  function irParaCarro(carro) {
+    navigate(`/carros/${carro.id}`)
+    setValor('')
+    setAberto(false)
+    onClose?.()
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault()
+    if (valor.trim()) {
+      navigate(`/catalogo?q=${valor.trim()}`)
+      setValor('')
+      setAberto(false)
+      onClose?.()
+    }
+  }
+
+  return (
+    <div ref={ref} className={`relative ${className}`}>
+      <form onSubmit={handleSubmit} className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none" style={{ fontSize: 18 }}>search</span>
+          <input
+            autoFocus
+            value={valor}
+            onChange={e => { setValor(e.target.value); setAberto(true) }}
+            onFocus={() => valor.trim() && setAberto(true)}
+            placeholder="Buscar marca ou modelo..."
+            className="w-full bg-surface-low border border-outline-variant rounded-lg py-2 pl-9 pr-3 text-sm text-on-surface outline-none focus:border-primary-container transition"
+          />
+        </div>
+        {onClose && (
+          <button type="button" onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-surface-container rounded-full transition-colors shrink-0">
+            <span className="material-symbols-outlined text-[20px] text-on-surface-variant">close</span>
+          </button>
+        )}
+      </form>
+
+      {/* Dropdown de sugestões */}
+      {aberto && sugestoes.length > 0 && (
+        <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-white dark:bg-surface-container rounded-xl shadow-lg border border-outline-variant overflow-hidden">
+          {sugestoes.map(c => (
+            <button
+              key={c.id}
+              onMouseDown={() => irParaCarro(c)}
+              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-surface-low transition-colors text-left"
+            >
+              {c.logo_url && <img src={c.logo_url} alt={c.marca} className="w-5 h-5 object-contain shrink-0" />}
+              <span className="text-sm text-on-surface">
+                <span className="font-semibold">{c.marca}</span> {c.modelo}
+              </span>
+              <span className="ml-auto text-xs text-on-surface-variant shrink-0">{c.ano}</span>
+            </button>
+          ))}
+          <button
+            onMouseDown={handleSubmit}
+            className="w-full flex items-center gap-2 px-4 py-2.5 border-t border-outline-variant hover:bg-surface-low transition-colors text-left"
+          >
+            <span className="material-symbols-outlined text-outline text-[16px]">search</span>
+            <span className="text-sm text-on-surface-variant">Ver todos os resultados para <span className="font-semibold text-on-surface">"{valor}"</span></span>
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function Navbar() {
   const navigate  = useNavigate()
   const { pathname } = useLocation()
   const usuario   = useUsuario()
   const { dark, alternar } = useTema()
-  const [menuOpen, setMenuOpen]       = useState(false)
-  const [searchOpen, setSearchOpen]   = useState(false)
-  const [searchValue, setSearchValue] = useState('')
-
-  function handleSearch(e) {
-    e.preventDefault()
-    if (searchValue.trim()) {
-      navigate(`/catalogo?q=${searchValue.trim()}`)
-      setSearchOpen(false)
-      setSearchValue('')
-    }
-  }
+  const [menuOpen, setMenuOpen]     = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
 
   return (
     <>
@@ -78,25 +163,18 @@ export function Navbar() {
               <span className="material-symbols-outlined text-[20px]">{dark ? 'light_mode' : 'dark_mode'}</span>
             </button>
 
-            {/* Search inline */}
+            {/* Search inline com autocomplete */}
             {searchOpen ? (
-              <form onSubmit={handleSearch} className="flex items-center gap-2">
-                <input
-                  autoFocus
-                  value={searchValue}
-                  onChange={e => setSearchValue(e.target.value)}
-                  placeholder="Buscar carro..."
-                  className="bg-surface-low border border-outline-variant rounded-lg px-3 py-1.5 text-sm text-on-surface outline-none focus:border-primary-container w-48 transition-all"
-                />
-                <button type="button" onClick={() => setSearchOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                  <span className="material-symbols-outlined text-[20px] text-on-surface-variant">close</span>
-                </button>
-              </form>
+              <SearchInput
+                onClose={() => setSearchOpen(false)}
+                className="w-64"
+              />
             ) : (
-              <button onClick={() => setSearchOpen(true)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-on-surface-variant hover:text-on-surface">
+              <button onClick={() => setSearchOpen(true)} className="p-2 hover:bg-slate-100 dark:hover:bg-surface-container rounded-full transition-colors text-on-surface-variant hover:text-on-surface">
                 <span className="material-symbols-outlined text-[20px]">search</span>
               </button>
             )}
+
             <button onClick={() => navigate('/comparar')} className="p-2 hover:bg-slate-100 dark:hover:bg-surface-container rounded-full transition-colors text-on-surface-variant hover:text-on-surface flex items-center gap-1">
               <span className="material-symbols-outlined text-[20px]">compare_arrows</span>
               <span className="text-sm font-semibold tracking-wide hidden lg:block">Comparar</span>
@@ -106,7 +184,7 @@ export function Navbar() {
               <span className="text-sm font-semibold tracking-wide hidden lg:block">Ranking</span>
             </button>
             {usuario && (
-              <button onClick={() => navigate('/favoritos')} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-on-surface-variant hover:text-on-surface">
+              <button onClick={() => navigate('/favoritos')} className="p-2 hover:bg-slate-100 dark:hover:bg-surface-container rounded-full transition-colors text-on-surface-variant hover:text-on-surface">
                 <span className="material-symbols-outlined text-[20px]">favorite</span>
               </button>
             )}
@@ -142,21 +220,10 @@ export function Navbar() {
 
         </div>
 
-        {/* Search bar mobile */}
+        {/* Search bar mobile com autocomplete */}
         {searchOpen && (
-          <div className="md:hidden px-6 pb-3 bg-white/90 dark:bg-surface backdrop-blur-md border-b border-slate-200 dark:border-outline-variant">
-            <form onSubmit={handleSearch} className="flex gap-2">
-              <input
-                autoFocus
-                value={searchValue}
-                onChange={e => setSearchValue(e.target.value)}
-                placeholder="Buscar marca ou modelo..."
-                className="flex-1 bg-surface-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:border-primary-container"
-              />
-              <button type="submit" className="bg-primary-container text-white px-4 rounded-lg text-sm font-semibold">
-                Buscar
-              </button>
-            </form>
+          <div className="md:hidden px-4 pb-3 bg-white/90 dark:bg-surface backdrop-blur-md border-b border-slate-200 dark:border-outline-variant">
+            <SearchInput onClose={() => setSearchOpen(false)} />
           </div>
         )}
       </nav>
@@ -165,7 +232,6 @@ export function Navbar() {
       {menuOpen && (
         <div className="md:hidden fixed top-[70px] left-0 right-0 z-40 bg-white dark:bg-surface border-b border-slate-200 dark:border-outline-variant shadow-float flex flex-col py-2">
 
-          {/* Links de navegação */}
           <button
             onClick={() => { navigate('/comparar'); setMenuOpen(false) }}
             className={`flex items-center gap-3 px-6 py-3 text-left text-sm font-semibold transition-colors ${
@@ -198,10 +264,8 @@ export function Navbar() {
             Ranking
           </button>
 
-          {/* Separador */}
           <div className="mx-6 my-2 border-t border-outline-variant" />
 
-          {/* Catálogo + Login/Sair */}
           <div className="px-6 flex flex-col gap-2 pb-2">
             <button
               onClick={() => { navigate('/catalogo'); setMenuOpen(false) }}
