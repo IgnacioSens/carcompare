@@ -14,10 +14,10 @@ export async function enviarEmailBoasVindas(email, nome) {
   await transporter.sendMail({
     from:    `"CarCompare" <${process.env.EMAIL_USER}>`,
     to:      email,
-    subject: 'Bem-vindo ao CarCompare! 🚗',
+    subject: 'Bem-vindo ao CarCompare!',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f8f9ff; padding: 32px; border-radius: 12px;">
-        <h1 style="color: #141936; font-size: 24px; margin-bottom: 8px;">Olá, ${nome}! 👋</h1>
+        <h1 style="color: #141936; font-size: 24px; margin-bottom: 8px;">Olá, ${nome}!</h1>
         <p style="color: #46464d; font-size: 15px; line-height: 1.6;">
           Seu cadastro no <strong>CarCompare</strong> foi realizado com sucesso.
         </p>
@@ -25,7 +25,7 @@ export async function enviarEmailBoasVindas(email, nome) {
           Agora você pode buscar, comparar e salvar seus carros favoritos.
         </p>
         <div style="margin: 24px 0;">
-          <a href="http://localhost:5173/catalogo"
+          <a href="${process.env.FRONTEND_URL || 'https://carcompare.vercel.app'}/catalogo"
              style="background: #141936; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">
             Explorar catálogo
           </a>
