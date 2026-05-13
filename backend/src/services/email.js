@@ -1,18 +1,13 @@
-import nodemailer from 'nodemailer'
+import { Resend } from 'resend'
 
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: Number(process.env.EMAIL_PORT),
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-})
+const resend = new Resend(process.env.RESEND_API_KEY)
+
+const FROM = 'CarCompare <onboarding@resend.dev>'
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://carcompare.vercel.app'
 
 export async function enviarEmailBoasVindas(email, nome) {
-  await transporter.sendMail({
-    from:    `"CarCompare" <${process.env.EMAIL_USER}>`,
+  await resend.emails.send({
+    from:    FROM,
     to:      email,
     subject: 'Bem-vindo ao CarCompare!',
     html: `
@@ -25,7 +20,7 @@ export async function enviarEmailBoasVindas(email, nome) {
           Agora você pode buscar, comparar e salvar seus carros favoritos.
         </p>
         <div style="margin: 24px 0;">
-          <a href="${process.env.FRONTEND_URL || 'https://carcompare.vercel.app'}/catalogo"
+          <a href="${FRONTEND_URL}/catalogo"
              style="background: #141936; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">
             Explorar catálogo
           </a>
@@ -38,8 +33,8 @@ export async function enviarEmailBoasVindas(email, nome) {
 }
 
 export async function enviarEmailContato(nome, email, mensagem) {
-  await transporter.sendMail({
-    from:    `"CarCompare" <${process.env.EMAIL_USER}>`,
+  await resend.emails.send({
+    from:    FROM,
     to:      process.env.EMAIL_DESTINO,
     subject: `Nova mensagem de contato — ${nome}`,
     html: `
