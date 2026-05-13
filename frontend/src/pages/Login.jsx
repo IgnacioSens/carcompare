@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import api from '../services/api'
 import { Input, Button } from '../components/ui'
 
 export function Login() {
@@ -26,7 +26,7 @@ export function Login() {
 
     try {
       if (modo === 'login') {
-        const { data } = await axios.post('/api/auth/login', {
+        const { data } = await api.post('/auth/login', {
           email: form.email,
           senha: form.senha,
         })
@@ -35,7 +35,7 @@ export function Login() {
         navigate('/')
 
       } else {
-        await axios.post('/api/auth/cadastro', {
+        await api.post('/auth/cadastro', {
           nome:  form.nome,
           email: form.email,
           senha: form.senha,
