@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://carcompare.vercel.app'
+const FRONTEND_URL = 'https://carcompare-three.vercel.app'
 
 async function enviar({ to, subject, html }) {
   await axios.post('https://api.brevo.com/v3/smtp/email', {
