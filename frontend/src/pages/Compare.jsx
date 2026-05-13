@@ -67,7 +67,7 @@ function BuscaCarro({ label, carros, valor, onSelecionar, carroExcluido }) {
     if (carroExcluido && c.id === carroExcluido.id) return false
     const termo = busca.toLowerCase()
     return !termo || c.modelo.toLowerCase().includes(termo) || c.marca.toLowerCase().includes(termo)
-  }).slice(0, 8)
+  })
 
   function selecionar(carro) {
     onSelecionar(carro)
