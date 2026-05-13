@@ -1,190 +1,297 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Button, Badge } from '../components/ui'
+import { useState, useEffect, useRef } from 'react'
+import api from '../services/api'
+import { Badge } from '../components/ui'
+import { useTitulo } from '../hooks/useTitulo'
 
-const ALL_CARS = [
-  { id:1,  brand:'Porsche',       model:'911 Carrera S',      price:'R$ 980.000',   priceNum:980000,   hp:450, torque:'530 Nm', acc:'3.7s', topSpeed:'308 km/h', engine:'3.0 Biturbo',   trans:'PDK 8v',   drive:'Traseira', fuel:'Gasolina', cons:'11,4 km/l', length:'4.519mm', width:'1.852mm', height:'1.300mm', trunk:'132L',  bg:'#dce9ff' },
-  { id:2,  brand:'BMW',           model:'M4 Competition',     price:'R$ 985.000',   priceNum:985000,   hp:510, torque:'650 Nm', acc:'3.9s', topSpeed:'290 km/h', engine:'3.0 Biturbo',   trans:'M DCT 8v', drive:'Traseira', fuel:'Gasolina', cons:'10,8 km/l', length:'4.794mm', width:'1.887mm', height:'1.393mm', trunk:'440L',  bg:'#d3e4fe' },
-  { id:3,  brand:'Audi',          model:'RS e-tron GT',       price:'R$ 1.100.000', priceNum:1100000,  hp:646, torque:'830 Nm', acc:'3.3s', topSpeed:'250 km/h', engine:'Elétrico Dual', trans:'1v auto',  drive:'Integral', fuel:'Elétrico', cons:'5.9 km/kWh',length:'4.989mm', width:'1.964mm', height:'1.414mm', trunk:'366L',  bg:'#e5eeff' },
-  { id:4,  brand:'Mercedes-Benz', model:'AMG G 63',           price:'R$ 1.850.000', priceNum:1850000,  hp:585, torque:'850 Nm', acc:'4.5s', topSpeed:'220 km/h', engine:'4.0 V8 Turbo',  trans:'AMG 9v',   drive:'Integral', fuel:'Gasolina', cons:'7.2 km/l',  length:'4.763mm', width:'1.931mm', height:'1.969mm', trunk:'688L',  bg:'#cbdbf5' },
-  { id:5,  brand:'Toyota',        model:'Corolla Cross',      price:'R$ 185.000',   priceNum:185000,   hp:177, torque:'188 Nm', acc:'9.2s', topSpeed:'180 km/h', engine:'2.0 Híbrido',   trans:'CVT',      drive:'Dianteira',fuel:'Híbrido',  cons:'16.2 km/l', length:'4.460mm', width:'1.825mm', height:'1.620mm', trunk:'440L',  bg:'#dce9ff' },
-  { id:6,  brand:'Honda',         model:'Civic Touring',      price:'R$ 198.000',   priceNum:198000,   hp:174, torque:'220 Nm', acc:'8.1s', topSpeed:'210 km/h', engine:'1.5 Turbo',     trans:'CVT',      drive:'Dianteira',fuel:'Gasolina', cons:'14.1 km/l', length:'4.674mm', width:'1.802mm', height:'1.415mm', trunk:'519L',  bg:'#d3e4fe' },
-  { id:7,  brand:'Volkswagen',    model:'Golf GTI',           price:'R$ 240.000',   priceNum:240000,   hp:245, torque:'370 Nm', acc:'6.3s', topSpeed:'250 km/h', engine:'2.0 TSI',       trans:'DSG 7v',   drive:'Dianteira',fuel:'Gasolina', cons:'12.5 km/l', length:'4.284mm', width:'1.799mm', height:'1.452mm', trunk:'380L',  bg:'#e5eeff' },
-  { id:8,  brand:'Jeep',          model:'Compass Limited',    price:'R$ 230.000',   priceNum:230000,   hp:185, torque:'270 Nm', acc:'8.8s', topSpeed:'195 km/h', engine:'2.0 Flex',      trans:'Auto 9v',  drive:'Dianteira',fuel:'Gasolina', cons:'10.8 km/l', length:'4.411mm', width:'1.858mm', height:'1.654mm', trunk:'438L',  bg:'#cbdbf5' },
-  { id:9,  brand:'Ferrari',       model:'Roma Spider',        price:'R$ 3.200.000', priceNum:3200000,  hp:620, torque:'760 Nm', acc:'3.4s', topSpeed:'320 km/h', engine:'3.9 V8 Turbo',  trans:'DCT 8v',   drive:'Traseira', fuel:'Gasolina', cons:'9.1 km/l',  length:'4.656mm', width:'1.974mm', height:'1.298mm', trunk:'200L',  bg:'#dce9ff' },
-  { id:10, brand:'Hyundai',       model:'HB20 Diamond',       price:'R$ 99.000',    priceNum:99000,    hp:116, torque:'146 Nm', acc:'10.1s',topSpeed:'175 km/h', engine:'1.0 Turbo',     trans:'Auto 6v',  drive:'Dianteira',fuel:'Gasolina', cons:'13.8 km/l', length:'4.070mm', width:'1.734mm', height:'1.505mm', trunk:'300L',  bg:'#d3e4fe' },
-  { id:11, brand:'Tesla',         model:'Model 3 Long Range', price:'R$ 450.000',   priceNum:450000,   hp:358, torque:'493 Nm', acc:'4.2s', topSpeed:'233 km/h', engine:'Elétrico Dual', trans:'1v auto',  drive:'Integral', fuel:'Elétrico', cons:'6.5 km/kWh',length:'4.720mm', width:'1.849mm', height:'1.443mm', trunk:'594L',  bg:'#e5eeff' },
-  { id:12, brand:'Toyota',        model:'Hilux GR Sport',     price:'R$ 365.000',   priceNum:365000,   hp:224, torque:'500 Nm', acc:'9.5s', topSpeed:'175 km/h', engine:'2.8 Diesel',    trans:'Auto 6v',  drive:'Integral', fuel:'Diesel',   cons:'10.2 km/l', length:'5.330mm', width:'1.855mm', height:'1.815mm', trunk:'750L',  bg:'#cbdbf5' },
-]
-
-// Campos comparáveis com lógica de "melhor"
-const ROWS = [
-  { key:'price',    label:'Preço',          better:'min', format: c => c.price },
-  { key:'hp',       label:'Potência',       better:'max', format: c => `${c.hp} cv` },
-  { key:'torque',   label:'Torque',         better:'max', format: c => c.torque },
-  { key:'acc',      label:'0–100 km/h',     better:'min', format: c => c.acc },
-  { key:'topSpeed', label:'Vel. máxima',    better:'max', format: c => c.topSpeed },
-  { key:'engine',   label:'Motor',          better:null,  format: c => c.engine },
-  { key:'trans',    label:'Transmissão',    better:null,  format: c => c.trans },
-  { key:'drive',    label:'Tração',         better:null,  format: c => c.drive },
-  { key:'fuel',     label:'Combustível',    better:null,  format: c => c.fuel },
-  { key:'cons',     label:'Consumo',        better:null,  format: c => c.cons },
-  { key:'length',   label:'Comprimento',    better:null,  format: c => c.length },
-  { key:'width',    label:'Largura',        better:null,  format: c => c.width },
-  { key:'height',   label:'Altura',         better:null,  format: c => c.height },
-  { key:'trunk',    label:'Porta-malas',    better:'max', format: c => c.trunk },
-]
-
-function numericVal(car, key) {
-  const v = car[key]
-  if (typeof v === 'number') return v
-  return parseFloat(String(v).replace(/[^\d.]/g,'')) || 0
+function formatarPreco(preco) {
+  return Number(preco).toLocaleString('pt-BR', {
+    style: 'currency', currency: 'BRL', maximumFractionDigits: 0
+  })
 }
 
-function getBetter(cars, key, better) {
-  if (!better || cars.length < 2) return null
-  const vals = cars.map(c => numericVal(c, key === 'price' ? { price: c.priceNum } : c, key === 'price' ? 'price' : key))
-  const vals2 = cars.map(c => key === 'price' ? c.priceNum : numericVal(c, key))
-  const best = better === 'max' ? Math.max(...vals2) : Math.min(...vals2)
-  return vals2.map(v => v === best)
+const combustivelLabel = {
+  flex: 'Flex', gasolina: 'Gasolina', diesel: 'Diesel',
+  eletrico: 'Elétrico', hibrido: 'Híbrido',
+}
+
+// Campos da tabela de comparação
+// tipo 'text'   → só exibe, sem destacar vencedor
+// tipo 'menor'  → menor valor vence (preço, consumo, 0-100)
+// tipo 'maior'  → maior valor vence (ano, potência, torque, vel. máx)
+const campos = [
+  { label: 'Marca',            key: 'marca',            tipo: 'text' },
+  { label: 'Categoria',        key: 'categoria',        tipo: 'text' },
+  { label: 'Combustível',      key: 'combustivel',      tipo: 'text',   format: v => combustivelLabel[v] || v },
+  { label: 'Ano',              key: 'ano',              tipo: 'maior' },
+  { label: 'Preço',            key: 'preco',            tipo: 'menor',  format: formatarPreco },
+  { label: 'Motor',            key: 'motor',            tipo: 'text' },
+  { label: 'Potência',         key: 'potencia',         tipo: 'maior' },
+  { label: 'Torque',           key: 'torque',           tipo: 'maior' },
+  { label: '0–100 km/h',       key: 'zero_cem',         tipo: 'menor' },
+  { label: 'Vel. máxima',      key: 'velocidade_maxima',tipo: 'maior' },
+  { label: 'Consumo',          key: 'consumo',          tipo: 'text' },
+]
+
+// Extrai número de uma string como "116 cv", "10.2s", "175 km/h"
+function extrairNumero(val) {
+  if (val == null) return null
+  const n = parseFloat(String(val).replace(',', '.'))
+  return isNaN(n) ? null : n
+}
+
+// Retorna 'A', 'B' ou null (empate/sem dados)
+function vencedor(campo, carroA, carroB) {
+  if (campo.tipo === 'text') return null
+  const a = extrairNumero(carroA[campo.key])
+  const b = extrairNumero(carroB[campo.key])
+  if (a == null || b == null || a === b) return null
+  if (campo.tipo === 'maior') return a > b ? 'A' : 'B'
+  if (campo.tipo === 'menor') return a < b ? 'A' : 'B'
+  return null
+}
+
+// Campo de busca com dropdown de sugestões
+function BuscaCarro({ label, carros, valor, onSelecionar, carroExcluido }) {
+  const [busca, setBusca]       = useState('')
+  const [aberto, setAberto]     = useState(false)
+  const ref                     = useRef(null)
+
+  // Fecha ao clicar fora
+  useEffect(() => {
+    function handler(e) { if (ref.current && !ref.current.contains(e.target)) setAberto(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const filtrados = carros.filter(c => {
+    if (carroExcluido && c.id === carroExcluido.id) return false
+    const termo = busca.toLowerCase()
+    return !termo || c.modelo.toLowerCase().includes(termo) || c.marca.toLowerCase().includes(termo)
+  }).slice(0, 8)
+
+  function selecionar(carro) {
+    onSelecionar(carro)
+    setBusca('')
+    setAberto(false)
+  }
+
+  function limpar() {
+    onSelecionar(null)
+    setBusca('')
+  }
+
+  return (
+    <div className="flex flex-col gap-1" ref={ref}>
+      <label className="text-[10px] font-bold tracking-widest uppercase text-on-surface-variant ml-1">{label}</label>
+
+      {/* Carro selecionado */}
+      {valor ? (
+        <div className="flex items-center justify-between bg-surface-low rounded-lg px-3 py-2.5 border border-primary-container/30">
+          <div className="flex items-center gap-2 min-w-0">
+            {valor.logo_url && <img src={valor.logo_url} alt={valor.marca} className="w-5 h-5 object-contain shrink-0" />}
+            <span className="text-sm font-semibold text-on-surface truncate">{valor.marca} {valor.modelo}</span>
+          </div>
+          <button onClick={limpar} className="material-symbols-outlined text-outline hover:text-on-surface transition-colors shrink-0 ml-2" style={{ fontSize: 18 }}>
+            close
+          </button>
+        </div>
+      ) : (
+        /* Input de busca */
+        <div className="relative">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none" style={{ fontSize: 18 }}>search</span>
+          <input
+            type="text"
+            placeholder="Buscar marca ou modelo..."
+            value={busca}
+            onChange={e => { setBusca(e.target.value); setAberto(true) }}
+            onFocus={() => setAberto(true)}
+            className="w-full bg-surface-low border border-transparent rounded-lg py-2.5 pl-10 pr-3 text-sm text-on-surface outline-none transition focus:border-primary-container focus:ring-2 focus:ring-primary-container/10"
+          />
+
+          {/* Dropdown */}
+          {aberto && filtrados.length > 0 && (
+            <div className="absolute z-30 top-full mt-1 w-full bg-white dark:bg-surface-container rounded-xl shadow-lg border border-outline-variant overflow-hidden">
+              {filtrados.map(c => (
+                <button
+                  key={c.id}
+                  onMouseDown={() => selecionar(c)}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-surface-low transition-colors text-left"
+                >
+                  {c.logo_url && <img src={c.logo_url} alt={c.marca} className="w-5 h-5 object-contain shrink-0" />}
+                  <span className="text-sm text-on-surface"><span className="font-semibold">{c.marca}</span> {c.modelo}</span>
+                  <span className="ml-auto text-xs text-on-surface-variant">{c.ano}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {aberto && busca && filtrados.length === 0 && (
+            <div className="absolute z-30 top-full mt-1 w-full bg-white dark:bg-surface-container rounded-xl shadow-lg border border-outline-variant px-4 py-3">
+              <p className="text-sm text-on-surface-variant">Nenhum carro encontrado.</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export function Compare() {
-  const navigate = useNavigate()
-  const [selected, setSelected] = useState([null, null])
+  useTitulo('Comparar')
+  const [todos, setTodos]   = useState([])
+  const [carroA, setCarroA] = useState(null)
+  const [carroB, setCarroB] = useState(null)
 
-  function pick(slot, id) {
-    const car = ALL_CARS.find(c => c.id === Number(id)) || null
-    setSelected(prev => { const next = [...prev]; next[slot] = car; return next })
+  useEffect(() => {
+    api.get('/carros').then(res => setTodos(res.data)).catch(console.error)
+  }, [])
+
+  // Busca detalhes completos ao selecionar
+  async function selecionarA(carro) {
+    if (!carro) { setCarroA(null); return }
+    const res = await api.get(`/carros/${carro.id}`)
+    setCarroA(res.data)
   }
 
-  function remove(slot) {
-    setSelected(prev => { const next = [...prev]; next[slot] = null; return next })
+  async function selecionarB(carro) {
+    if (!carro) { setCarroB(null); return }
+    const res = await api.get(`/carros/${carro.id}`)
+    setCarroB(res.data)
   }
 
-  const activeCars = selected.filter(Boolean)
+  const comparando = carroA && carroB
 
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="max-w-app mx-auto px-4 sm:px-6 py-8 sm:py-10 flex flex-col gap-8">
 
-      {/* Header */}
-      <div className="bg-white border-b border-outline-variant/50">
-        <div className="max-w-app mx-auto px-6 py-8">
-          <p className="text-[11px] font-bold tracking-widest uppercase text-primary-container mb-1">Ferramentas</p>
-          <h1 className="text-3xl font-bold text-on-surface">Comparar veículos</h1>
-          <p className="text-on-surface-variant text-sm mt-1">Selecione até 2 carros para comparar lado a lado</p>
-        </div>
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-black text-on-surface">Comparar</h1>
+        <p className="text-on-surface-variant text-sm mt-1">Busque dois carros para comparar lado a lado.</p>
       </div>
 
-      <div className="max-w-app mx-auto px-6 py-10 flex flex-col gap-10">
+      {/* Seletores de busca */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <BuscaCarro label="Carro A" carros={todos} valor={carroA} onSelecionar={selecionarA} carroExcluido={carroB} />
+        <BuscaCarro label="Carro B" carros={todos} valor={carroB} onSelecionar={selecionarB} carroExcluido={carroA} />
+      </div>
 
-        {/* Seletores */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[0, 1].map(slot => (
-            <div key={slot}>
-              {selected[slot] ? (
-                <div className="bg-white rounded-xl border border-outline-variant/50 p-5 flex items-center gap-4">
-                  <div className="w-20 h-16 rounded-lg flex items-center justify-center shrink-0" style={{background: selected[slot].bg}}>
-                    <svg viewBox="0 0 500 260" className="w-full opacity-20" fill="#0b1c30">
-                      <path d="M40 190 Q40 150 80 140 L150 110 Q190 80 240 75 L360 75 Q420 76 450 130 L470 180 Q475 195 465 200 L50 200 Q40 200 40 190Z"/>
-                      <ellipse cx="120" cy="200" rx="38" ry="38"/>
-                      <ellipse cx="370" cy="200" rx="38" ry="38"/>
-                    </svg>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold tracking-widest uppercase text-on-surface-variant">{selected[slot].brand}</p>
-                    <p className="font-bold text-on-surface truncate">{selected[slot].model}</p>
-                    <p className="text-sm font-semibold text-on-surface-variant">{selected[slot].price}</p>
-                  </div>
-                  <button onClick={() => remove(slot)} className="p-1.5 hover:bg-surface-low rounded-full transition-colors text-on-surface-variant">
-                    <span className="material-symbols-outlined" style={{fontSize:18}}>close</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="bg-white rounded-xl border-2 border-dashed border-outline-variant/70 p-5 flex flex-col gap-3">
-                  <p className="text-sm font-semibold text-on-surface-variant">Carro {slot + 1}</p>
-                  <select onChange={e => pick(slot, e.target.value)} defaultValue=""
-                    className="w-full bg-surface-low rounded-lg py-2.5 px-3 text-sm text-on-surface outline-none border border-transparent focus:border-primary-container cursor-pointer">
-                    <option value="" disabled>Selecionar veículo...</option>
-                    {ALL_CARS.filter(c => c.id !== selected[slot === 0 ? 1 : 0]?.id).map(c => (
-                      <option key={c.id} value={c.id}>{c.brand} {c.model}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
+      {/* Imagens */}
+      {(carroA || carroB) && (
+        <div className="grid grid-cols-2 gap-4">
+          {[carroA, carroB].map((carro, i) => (
+            <div key={i} className="bg-surface-container rounded-2xl overflow-hidden flex items-center justify-center aspect-video">
+              {carro?.imagem_url
+                ? <img src={carro.imagem_url} alt={carro.modelo} className="w-full h-full object-cover" />
+                : carro
+                  ? <span className="material-symbols-outlined text-outline-variant" style={{ fontSize: 64 }}>directions_car</span>
+                  : <div className="w-full h-full bg-surface-container flex items-center justify-center">
+                      <span className="material-symbols-outlined text-outline-variant" style={{ fontSize: 48 }}>add_circle</span>
+                    </div>
+              }
             </div>
           ))}
         </div>
+      )}
 
-        {/* Tabela comparativa */}
-        {activeCars.length === 2 ? (
-          <div className="bg-white rounded-xl border border-outline-variant/50 overflow-hidden">
+      {/* Tabela de comparação */}
+      {comparando && (
+        <div className="bg-white dark:bg-surface-container rounded-2xl shadow-card overflow-hidden">
 
-            {/* Cabeçalho */}
-            <div className="grid border-b border-outline-variant/50" style={{gridTemplateColumns:'200px repeat(2, 1fr)'}}>
-              <div className="p-4 bg-surface-low" />
-              {activeCars.map(car => (
-                <div key={car.id} className="p-5 flex flex-col items-center gap-1 border-l border-outline-variant/50">
-                  <div className="w-16 h-12 rounded-lg flex items-center justify-center" style={{background: car.bg}}>
-                    <svg viewBox="0 0 500 260" className="w-full opacity-20" fill="#0b1c30">
-                      <path d="M40 190 Q40 150 80 140 L150 110 Q190 80 240 75 L360 75 Q420 76 450 130 L470 180 Q475 195 465 200 L50 200 Q40 200 40 190Z"/>
-                      <ellipse cx="120" cy="200" rx="38" ry="38"/>
-                    </svg>
-                  </div>
-                  <p className="text-[10px] font-bold tracking-widest uppercase text-on-surface-variant">{car.brand}</p>
-                  <p className="font-bold text-on-surface text-center text-sm">{car.model}</p>
-                  <Badge variant={car.fuel === 'Elétrico' ? 'electric' : 'default'}>{car.fuel}</Badge>
-                </div>
-              ))}
-            </div>
-
-            {/* Linhas */}
-            {ROWS.map((row, i) => {
-              const betterArr = getBetter(activeCars, row.key, row.better)
-              return (
-                <div key={row.key}
-                  className={`grid items-stretch ${i % 2 === 0 ? 'bg-white' : 'bg-surface-low/40'}`}
-                  style={{gridTemplateColumns:'200px repeat(2, 1fr)'}}>
-                  <div className="px-5 py-3.5 flex items-center">
-                    <span className="text-xs font-bold tracking-wide uppercase text-on-surface-variant">{row.label}</span>
-                  </div>
-                  {activeCars.map((car, ci) => {
-                    const isBetter = betterArr?.[ci]
-                    return (
-                      <div key={car.id}
-                        className={`px-5 py-3.5 flex items-center justify-center border-l border-outline-variant/50 text-sm font-semibold text-on-surface
-                          ${isBetter ? 'bg-green-50 text-green-700' : ''}`}>
-                        {isBetter && <span className="material-symbols-outlined text-green-600 mr-1" style={{fontSize:14}}>arrow_upward</span>}
-                        {row.format(car)}
-                      </div>
-                    )
-                  })}
-                </div>
-              )
-            })}
-
-            {/* Ações */}
-            <div className="grid border-t border-outline-variant/50" style={{gridTemplateColumns:'200px repeat(2, 1fr)'}}>
-              <div className="p-4 bg-surface-low" />
-              {activeCars.map(car => (
-                <div key={car.id} className="p-4 flex justify-center border-l border-outline-variant/50">
-                  <Button variant="outline" size="sm" onClick={() => navigate(`/carros/${car.id}`)}>
-                    Ver detalhes
-                  </Button>
-                </div>
-              ))}
-            </div>
+          {/* Cabeçalho */}
+          <div className="grid grid-cols-3 bg-surface-container">
+            <div className="p-4" />
+            {[carroA, carroB].map((carro, i) => (
+              <div key={i} className="p-4 border-l border-outline-variant">
+                {carro.logo_url && <img src={carro.logo_url} alt={carro.marca} className="w-6 h-6 object-contain mb-1" />}
+                <p className="text-xs font-bold tracking-widest uppercase text-on-surface-variant">{carro.marca}</p>
+                <p className="font-black text-on-surface text-sm sm:text-base">{carro.modelo}</p>
+                <p className="text-xs text-on-surface-variant mt-0.5">{carro.ano}</p>
+              </div>
+            ))}
           </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-20 gap-4 bg-white rounded-xl border border-outline-variant/50">
-            <span className="material-symbols-outlined text-outline-variant" style={{fontSize:56}}>compare_arrows</span>
-            <p className="text-on-surface-variant font-medium">Selecione 2 veículos para comparar</p>
-            <Button variant="outline" onClick={() => navigate('/catalogo')}>
-              Explorar catálogo
-            </Button>
-          </div>
-        )}
-      </div>
+
+          {/* Linhas */}
+          {campos.map((campo, i) => {
+            const valA    = campo.format ? campo.format(carroA[campo.key]) : carroA[campo.key]
+            const valB    = campo.format ? campo.format(carroB[campo.key]) : carroB[campo.key]
+            const ganhou  = vencedor(campo, carroA, carroB)
+            const venceA  = ganhou === 'A'
+            const venceB  = ganhou === 'B'
+
+            if (!carroA[campo.key] && !carroB[campo.key]) return null
+
+            return (
+              <div key={campo.key} className={`grid grid-cols-3 ${i % 2 === 0 ? 'bg-white dark:bg-surface-container' : 'bg-surface-low'}`}>
+                <div className="p-3 sm:p-4 text-[10px] sm:text-xs font-bold tracking-widest uppercase text-on-surface-variant flex items-center">
+                  {campo.label}
+                </div>
+
+                {/* Valor A */}
+                <div className={`p-3 sm:p-4 border-l border-outline-variant flex items-center gap-2 ${venceA ? 'bg-green-50' : ''}`}>
+                  <span className={`text-xs sm:text-sm font-semibold ${venceA ? 'text-green-700' : 'text-on-surface'}`}>
+                    {valA || '—'}
+                  </span>
+                  {venceA && <span className="material-symbols-outlined text-green-500 shrink-0" style={{ fontSize: 16 }}>arrow_upward</span>}
+                </div>
+
+                {/* Valor B */}
+                <div className={`p-3 sm:p-4 border-l border-outline-variant flex items-center gap-2 ${venceB ? 'bg-green-50' : ''}`}>
+                  <span className={`text-xs sm:text-sm font-semibold ${venceB ? 'text-green-700' : 'text-on-surface'}`}>
+                    {valB || '—'}
+                  </span>
+                  {venceB && <span className="material-symbols-outlined text-green-500 shrink-0" style={{ fontSize: 16 }}>arrow_upward</span>}
+                </div>
+              </div>
+            )
+          })}
+
+          {/* Placar final */}
+          {(() => {
+            let pontosA = 0, pontosB = 0
+            campos.forEach(c => {
+              const v = vencedor(c, carroA, carroB)
+              if (v === 'A') pontosA++
+              if (v === 'B') pontosB++
+            })
+            const campeao = pontosA > pontosB ? carroA : pontosB > pontosA ? carroB : null
+            return (
+              <div className="p-5 bg-surface-container border-t border-outline-variant flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="flex items-center gap-4">
+                  <div className="text-center">
+                    <p className={`text-2xl font-black ${pontosA >= pontosB ? 'text-green-600' : 'text-on-surface-variant'}`}>{pontosA}</p>
+                    <p className="text-xs text-on-surface-variant">{carroA.modelo}</p>
+                  </div>
+                  <p className="text-on-surface-variant font-bold text-lg">×</p>
+                  <div className="text-center">
+                    <p className={`text-2xl font-black ${pontosB >= pontosA ? 'text-green-600' : 'text-on-surface-variant'}`}>{pontosB}</p>
+                    <p className="text-xs text-on-surface-variant">{carroB.modelo}</p>
+                  </div>
+                </div>
+                {campeao
+                  ? <div className="flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-bold">
+                      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>emoji_events</span>
+                      {campeao.marca} {campeao.modelo} venceu!
+                    </div>
+                  : <div className="flex items-center gap-2 bg-surface-low text-on-surface-variant px-4 py-2 rounded-full text-sm font-bold">
+                      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>handshake</span>
+                      Empate!
+                    </div>
+                }
+              </div>
+            )
+          })()}
+
+        </div>
+      )}
+
+      {/* Estado vazio */}
+      {!carroA && !carroB && (
+        <div className="flex flex-col items-center justify-center py-20 gap-3 text-on-surface-variant">
+          <span className="material-symbols-outlined text-outline-variant" style={{ fontSize: 64 }}>compare_arrows</span>
+          <p className="text-sm">Busque dois carros acima para começar.</p>
+        </div>
+      )}
+
     </div>
   )
 }

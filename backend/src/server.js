@@ -1,22 +1,28 @@
 import 'dotenv/config'
 import express from 'express'
-import cors from 'cors'
+import cors    from 'cors'
+import authRoutes     from './routes/auth.js'
+import carrosRoutes   from './routes/carros.js'
+import favoritosRoutes from './routes/favoritos.js'
+import contatoRoutes   from './routes/contato.js'
+import votosRoutes     from './routes/votos.js'
 
-const app = express()
+const app  = express()
 const PORT = process.env.PORT || 3001
 
 app.use(cors())
 app.use(express.json())
 
-// Health check
+app.use('/api/auth',      authRoutes)
+app.use('/api/carros',   carrosRoutes)
+app.use('/api/favoritos', favoritosRoutes)
+app.use('/api/contato',  contatoRoutes)
+app.use('/api/votos',    votosRoutes)
+
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'CarCompare API running 🚗' })
+  res.json({ status: 'ok', mensagem: 'Servidor CarCompare rodando' })
 })
 
-// Rotas (serão adicionadas nas próximas US)
-// import carRoutes from './routes/cars.js'
-// app.use('/api/cars', carRoutes)
-
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`)
+  console.log(`Servidor rodando na porta ${PORT}`)
 })

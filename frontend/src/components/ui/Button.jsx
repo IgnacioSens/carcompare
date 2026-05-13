@@ -1,7 +1,7 @@
 const variants = {
   primary:   'bg-primary-container text-white hover:bg-surface-tint',
   secondary: 'bg-surface-container text-on-surface border border-outline-variant hover:bg-surface-dim',
-  outline:   'bg-white text-on-surface border border-outline-variant hover:border-primary-container',
+  outline:   'bg-white dark:bg-surface-container text-on-surface border border-outline-variant hover:border-primary-container',
   ghost:     'bg-transparent text-on-surface-variant hover:text-on-surface hover:bg-surface-low',
 }
 const sizes = {

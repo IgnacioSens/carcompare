@@ -1,4 +1,5 @@
 import { Navbar } from './Navbar'
+import { Footer } from './Footer'
 
 export function Layout({ children }) {
   return (
@@ -7,6 +8,7 @@ export function Layout({ children }) {
       <main className="flex-1">
         {children}
       </main>
+      <Footer />
     </div>
   )
 }
