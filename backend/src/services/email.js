@@ -1,13 +1,20 @@
-import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST,
+  port: Number(process.env.EMAIL_PORT),
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+})
 
-const FROM = 'CarCompare <onboarding@resend.dev>'
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://carcompare.vercel.app'
 
 export async function enviarEmailBoasVindas(email, nome) {
-  await resend.emails.send({
-    from:    FROM,
+  await transporter.sendMail({
+    from:    `"CarCompare" <${process.env.EMAIL_USER}>`,
     to:      email,
     subject: 'Bem-vindo ao CarCompare!',
     html: `
@@ -33,8 +40,8 @@ export async function enviarEmailBoasVindas(email, nome) {
 }
 
 export async function enviarEmailContato(nome, email, mensagem) {
-  await resend.emails.send({
-    from:    FROM,
+  await transporter.sendMail({
+    from:    `"CarCompare" <${process.env.EMAIL_USER}>`,
     to:      process.env.EMAIL_DESTINO,
     subject: `Nova mensagem de contato — ${nome}`,
     html: `
