@@ -110,7 +110,7 @@ function BuscaCarro({ label, carros, valor, onSelecionar, carroExcluido }) {
 
           {/* Dropdown */}
           {aberto && filtrados.length > 0 && (
-            <div className="absolute z-30 top-full mt-1 w-full bg-white dark:bg-surface-container rounded-xl shadow-lg border border-outline-variant overflow-hidden">
+            <div className="absolute z-30 top-full mt-1 w-full bg-white dark:bg-surface-container rounded-xl shadow-lg border border-outline-variant overflow-y-auto max-h-72">
               {filtrados.map(c => (
                 <button
                   key={c.id}
